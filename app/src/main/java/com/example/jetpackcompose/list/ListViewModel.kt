@@ -1,31 +1,62 @@
 package com.example.jetpackcompose.list
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.jetpackcompose.data.MemberRepository
+import com.example.jetpackcompose.data.local.AppDatabase
+import com.example.jetpackcompose.data.local.MemberEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
-data class ListUiState(
-    val query: String = "",
-    val members: List<Member> = emptyList()
-)
+class ListViewModel(
+    private val repo: MemberRepository,
+    app: Application
+) : AndroidViewModel(app) {
 
-class ListViewModel : ViewModel() {
-    private val repo = ItemRepository()
+    private val _query = MutableStateFlow("")
+    val query: StateFlow<String> = _query.asStateFlow()
 
-    var ui by mutableStateOf(ListUiState())
-        private set
+    val members: StateFlow<List<MemberEntity>> =
+        _query
+            .map { it.trim() }
+            .distinctUntilChanged()
+            .flatMapLatest { q ->
+                if (q.isEmpty()) repo.getAllFlow() else repo.searchFlow(q)
+            }
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    init {
-        ui = ui.copy(members = repo.getAll())
+    fun onSearchChange(q: String) { _query.value = q }
+
+    fun addMember(name: String) = viewModelScope.launch { repo.add(name) }
+
+    fun deleteMember(id: Long) = viewModelScope.launch { repo.delete(id) }
+
+    fun updateMemberName(id: Long, name: String) =
+        viewModelScope.launch { repo.updateName(id, name) }
+
+    // 只有需要 assets 時才用 Application Context（乾淨、安全）
+    fun ensureSeedIfEmpty() = viewModelScope.launch(Dispatchers.IO) {
+        repo.ensureSeedIfEmpty(getApplication())
     }
 
-    fun onQueryChange(v: String) {
-        ui = ui.copy(query = v, members = repo.search(v))
+    fun reseedFromAssets() = viewModelScope.launch(Dispatchers.IO) {
+        repo.reseedFromAssets(getApplication())
     }
 
-    fun delete(item: Member) {
-        repo.delete(item)
-        ui = ui.copy(members = repo.search(ui.query))
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]
+                        as Application
+                val dao = AppDatabase.get(app).memberDao()
+                val repo = MemberRepository(dao)
+                ListViewModel(repo, app)
+            }
+        }
     }
 }
