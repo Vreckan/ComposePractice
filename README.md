@@ -63,10 +63,10 @@ app/
   定義資料結構與資料操作邏輯（`MemberEntity`, `MemberDao`, `MemberRepository`）。
 
 - **ViewModel 層**：  
-  處理業務邏輯與 UI 狀態管理，使用 `StateFlow` 實現即時更新（如 `ListViewModel`、`LoginViewModel`）。
+  處理業務邏輯與 UI 狀態管理，使用 `StateFlow` 實現即時更新（ `ListViewModel`、`LoginViewModel`）。
 
 - **View 層**：  
-  採用 Compose 建構畫面，使用 `collectAsState()` 監聽資料變化（如 `LoginContent`, `ListScreen`）。
+  採用 Compose 建構畫面，使用 `collectAsState()` 監聽資料變化（ `LoginContent`, `ListContent`）。
 
 ---
 
