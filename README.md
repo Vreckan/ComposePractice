@@ -70,23 +70,6 @@ app/
 
 ---
 
-## 🔧 Firebase 設定
-
-1. 前往 [Firebase Console](https://console.firebase.google.com) 建立專案  
-2. 啟用 **Email/Password Authentication**  
-3. 下載 `google-services.json`，放入：
-   ```
-   app/google-services.json
-   ```
-4. 在 `build.gradle(:app)` 加上：
-   ```gradle
-   plugins {
-       id("com.google.gms.google-services")
-   }
-   ```
-
----
-
 ## 📦 主要依賴
 
 ```gradle
