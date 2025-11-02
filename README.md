@@ -1,4 +1,4 @@
-# 📱 Jetpack Compose Member App
+# 📱 Jetpack Compose Member App 2025/11/02
 
 這是一個以 **Jetpack Compose** 為核心開發的 Android 專案，  
 認證使用 **Firebase Authentication** 與 **Room Database**，  
