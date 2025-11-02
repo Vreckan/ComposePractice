@@ -13,27 +13,25 @@ data class LoginUiState(
 )
 
 class LoginViewModel : ViewModel() {
-
-    // Compose 會觀察這個狀態，變了就自動重組 UI
-    var ui by mutableStateOf(LoginUiState())
+    var uiState by mutableStateOf(LoginUiState())
         private set
 
     fun onAccountChange(v: String) {
-        ui = ui.copy(account = v, error = null)   // 打字時清錯誤
+        uiState = uiState.copy(account = v, error = null)
     }
 
     fun onPasswordChange(v: String) {
-        ui = ui.copy(password = v, error = null)  // 打字時清錯誤
+        uiState = uiState.copy(password = v, error = null)
     }
 
-    // 按下登入鍵時呼叫：驗證固定帳密 member/member
+    // 驗證
     fun tryLogin(onSuccess: () -> Unit) {
-        val ok = ui.account == "member" && ui.password == "member"
+        val ok = uiState.account == "member" && uiState.password == "member"
         if (ok) {
-            ui = LoginUiState()   // 成功後回到初始狀態（題目要求）
+            uiState = LoginUiState()
             onSuccess()
         } else {
-            ui = ui.copy(error = "account or password incorrect")
+            uiState = uiState.copy(error = "account or password incorrect")
         }
     }
 }

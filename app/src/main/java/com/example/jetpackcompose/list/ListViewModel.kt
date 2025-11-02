@@ -1,6 +1,7 @@
 package com.example.jetpackcompose.list
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -26,7 +27,8 @@ class ListViewModel(
             .map { it.trim() }
             .distinctUntilChanged()
             .flatMapLatest { q ->
-                if (q.isEmpty()) repo.getAllFlow() else repo.searchFlow(q)
+                if (q.isEmpty())
+                    repo.getAllFlow() else repo.searchFlow(q)
             }
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 

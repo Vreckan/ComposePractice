@@ -7,9 +7,9 @@ fun LoginScreen(
     onSuccess: () -> Unit,
     vm: LoginViewModel = viewModel()
 ) {
-    val ui = vm.ui
+    val uiState = vm.uiState
     LoginContent(
-        ui = ui,
+        uiState = uiState,
         onAccountChange = vm::onAccountChange,
         onPasswordChange = vm::onPasswordChange,
         onLoginClick = { vm.tryLogin(onSuccess) }

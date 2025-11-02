@@ -22,13 +22,17 @@ import androidx.compose.ui.unit.dp
 import com.example.jetpackcompose.R
 import com.example.jetpackcompose.data.local.MemberEntity
 
+/* ------------------------- 色票 ------------------------- */
 object AppColors {
-    val ScreenBg  = Color(0xFFFAF7F2)   // 米白底
+    val ScreenBg  = Color(0xFFFAF7F2)
     val CardBg    = Color.White
     val EditGray  = Color(0xFF8F8F8F)
     val DeleteRed = Color(0xFFE53935)
 }
 
+/* =========================================================
+ * 上：主畫面（組裝層）
+ * ========================================================= */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListContent(
@@ -42,11 +46,10 @@ fun ListContent(
 ) {
     val currentCount = members.size
 
-    // —— 只屬於 View 的臨時狀態 ——
+    // View 專屬臨時狀態
     var pendingDeleteId by rememberSaveable { mutableStateOf<Long?>(null) }
     var showImportConfirm by rememberSaveable { mutableStateOf(false) }
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
-    var newName by rememberSaveable { mutableStateOf("") }
     var pendingEdit by rememberSaveable { mutableStateOf<Pair<Long, String>?>(null) }
 
     Scaffold(
@@ -75,7 +78,6 @@ fun ListContent(
         ) {
             Spacer(Modifier.height(16.dp))
 
-            // 搜尋框（Figma 風格）
             SearchField(
                 value = query,
                 onValueChange = onQueryChange
@@ -85,7 +87,7 @@ fun ListContent(
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 96.dp), // 給 FAB 空間
+                contentPadding = PaddingValues(bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(items = members, key = { it.id }) { m ->
@@ -99,89 +101,54 @@ fun ListContent(
         }
     }
 
-    // —— 刪除確認 ——
-    if (pendingDeleteId != null) {
-        AlertDialog(
-            onDismissRequest = { pendingDeleteId = null },
-            title = { Text("刪除確認") },
-            text = { Text("確定要刪除這筆資料嗎？此動作無法復原。") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDeleteConfirm(pendingDeleteId!!)
-                        pendingDeleteId = null
-                    }
-                ) { Text("刪除") }
+    // 刪除
+    pendingDeleteId?.let { id ->
+        val targetName = members.firstOrNull { it.id == id }?.name
+        DeleteConfirmDialog(
+            targetName = targetName,
+            onConfirm = {
+                onDeleteConfirm(id)
+                pendingDeleteId = null
             },
-            dismissButton = { TextButton(onClick = { pendingDeleteId = null }) { Text("取消") } }
+            onDismiss = { pendingDeleteId = null }
         )
     }
 
-    // —— 匯入確認 ——
+    // 匯入
     if (showImportConfirm) {
-        AlertDialog(
-            onDismissRequest = { showImportConfirm = false },
-            title = { Text("匯入原資料") },
-            text = { Text("此動作會清空目前所有資料，並重新導入原始 JSON。確定繼續？") },
-            confirmButton = {
-                TextButton(onClick = { showImportConfirm = false; onImportConfirm() }) { Text("匯入") }
-            },
-            dismissButton = { TextButton(onClick = { showImportConfirm = false }) { Text("取消") } }
+        ImportConfirmDialog(
+            onConfirm = { showImportConfirm = false; onImportConfirm() },
+            onDismiss = { showImportConfirm = false }
         )
     }
 
-    // —— 編輯對話框 ——
+    // 編輯
     pendingEdit?.let { (id, oldName) ->
-        var editName by rememberSaveable(id) { mutableStateOf(oldName) }
-        AlertDialog(
-            onDismissRequest = { pendingEdit = null },
-            title = { Text("重新命名") },
-            text = {
-                OutlinedTextField(
-                    value = editName,
-                    onValueChange = { editName = it },
-                    singleLine = true,
-                    placeholder = { Text("輸入新名稱") }
-                )
+        EditMemberDialog(
+            initialName = oldName,
+            onConfirm = { newName ->
+                if (newName.isNotBlank()) onEditConfirm(id, newName.trim())
+                pendingEdit = null
             },
-            confirmButton = {
-                TextButton(onClick = {
-                    if (editName.isNotBlank()) onEditConfirm(id, editName.trim())
-                    pendingEdit = null
-                }) { Text("儲存") }
-            },
-            dismissButton = { TextButton(onClick = { pendingEdit = null }) { Text("取消") } }
+            onDismiss = { pendingEdit = null }
         )
     }
 
-    // —— 新增對話框 ——
+    // 新增
     if (showAddDialog) {
-        AlertDialog(
-            onDismissRequest = { newName = ""; showAddDialog = false },
-            title = { Text("新增成員") },
-            text = {
-                OutlinedTextField(
-                    value = newName,
-                    onValueChange = { newName = it },
-                    singleLine = true,
-                    placeholder = { Text("請輸入姓名") }
-                )
+        AddMemberDialog(
+            onConfirm = { name ->
+                if (name.isNotBlank()) onAddConfirm(name.trim())
+                showAddDialog = false
             },
-            confirmButton = {
-                TextButton(onClick = {
-                    if (newName.isNotBlank()) onAddConfirm(newName.trim())
-                    newName = ""; showAddDialog = false
-                }) { Text("新增") }
-            },
-            dismissButton = {
-                TextButton(onClick = { newName = ""; showAddDialog = false }) { Text("取消") }
-            }
+            onDismiss = { showAddDialog = false }
         )
     }
 }
 
-/* ------------------------- 子元件：搜尋框（Figma 風格） ------------------------- */
-
+/* =========================================================
+ * 中：子元件（Field / Row / Dialogs）
+ * ========================================================= */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchField(
@@ -198,7 +165,7 @@ private fun SearchField(
         singleLine = true,
         leadingIcon = {
             Icon(
-                painterResource(R.drawable.vector), // 若你有專用 search 圖，換成 R.drawable.ic_search
+                painterResource(R.drawable.vector),
                 contentDescription = null,
                 tint = AppColors.EditGray
             )
@@ -213,8 +180,6 @@ private fun SearchField(
         )
     )
 }
-
-/* ------------------------- 子元件：每一列（卡片 + 頭像 + 兩個 icon） ------------------------- */
 
 @Composable
 private fun ListRow(
@@ -234,7 +199,6 @@ private fun ListRow(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 左側圓形頭像（用你自己的使用者 icon）
             Surface(
                 modifier = Modifier.size(44.dp),
                 shape = CircleShape,
@@ -258,7 +222,6 @@ private fun ListRow(
                 modifier = Modifier.weight(1f)
             )
 
-            // 編輯（灰）
             IconButton(onClick = onEdit) {
                 Icon(
                     painterResource(R.drawable.edit),
@@ -266,7 +229,6 @@ private fun ListRow(
                     tint = AppColors.EditGray
                 )
             }
-            // 刪除（紅）
             IconButton(onClick = onDelete) {
                 Icon(
                     painterResource(R.drawable.trash),
@@ -278,15 +240,107 @@ private fun ListRow(
     }
 }
 
-/* ------------------------- Preview ------------------------- */
+/* --- Dialog: 刪除確認 --- */
+@Composable
+private fun DeleteConfirmDialog(
+    targetName: String?,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("刪除確認") },
+        text = {
+            Text(
+                if (targetName != null)
+                    "確定要刪除 $targetName 嗎？此動作無法復原。"
+                else
+                    "確定要刪除這筆資料嗎？此動作無法復原。"
+            )
+        },
+        confirmButton = { TextButton(onClick = onConfirm) { Text("刪除") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+    )
+}
 
+/* --- Dialog: 匯入確認 --- */
+@Composable
+private fun ImportConfirmDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("匯入原資料") },
+        text = { Text("此動作會清空目前所有資料，並重新導入原始 JSON。確定繼續？") },
+        confirmButton = { TextButton(onClick = onConfirm) { Text("匯入") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+    )
+}
+
+/* --- Dialog: 新增成員 --- */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddMemberDialog(
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var name by rememberSaveable { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("新增成員") },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                singleLine = true,
+                placeholder = { Text("請輸入姓名") }
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(name) }) { Text("新增") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+    )
+}
+
+/* --- Dialog: 編輯名稱 --- */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditMemberDialog(
+    initialName: String,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var editName by rememberSaveable(initialName) { mutableStateOf(initialName) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("重新命名") },
+        text = {
+            OutlinedTextField(
+                value = editName,
+                onValueChange = { editName = it },
+                singleLine = true,
+                placeholder = { Text("輸入新名稱") }
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(editName) }) { Text("儲存") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+    )
+}
+
+/* =========================================================
+ * 下：Preview 區
+ * ========================================================= */
 class SampleMembersProvider : PreviewParameterProvider<List<MemberEntity>> {
     override val values = sequenceOf(
         listOf(
             MemberEntity(id = 1, name = "Alice"),
             MemberEntity(id = 2, name = "Bob"),
             MemberEntity(id = 3, name = "Charlie"),
-            MemberEntity(id = 4, name = "Diana")
+            MemberEntity(id = 4, name = "Diana"),
         )
     )
 }
@@ -304,5 +358,60 @@ fun ListContentPreview_Sample(
         onImportConfirm = {},
         onAddConfirm = {},
         onEditConfirm = { _, _ -> }
+    )
+}
+
+@Preview(name = "memberListRow - all sample", showBackground = true)
+@Composable
+fun memberListRowPreview_All(
+    @PreviewParameter(SampleMembersProvider::class) members: List<MemberEntity>
+) {
+    Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        members.forEach { m ->
+            ListRow(
+                name = m.name,
+                onEdit = {},
+                onDelete = {}
+            )
+        }
+    }
+}
+
+@Preview(name = "Dialog - Delete", showBackground = true)
+@Composable
+fun DeleteDialogPreview(
+    @PreviewParameter(SampleMembersProvider::class) members: List<MemberEntity>
+) {
+    DeleteConfirmDialog(
+        targetName = members.first().name,
+        onConfirm = {},
+        onDismiss = {}
+    )
+}
+
+@Preview(name = "Dialog - Import", showBackground = true)
+@Composable
+fun ImportDialogPreview() {
+    ImportConfirmDialog(onConfirm = {}, onDismiss = {})
+}
+
+@Preview(name = "Dialog - Add", showBackground = true)
+@Composable
+fun AddDialogPreview() {
+    AddMemberDialog(onConfirm = {}, onDismiss = {})
+}
+
+@Preview(name = "Dialog - Edit", showBackground = true)
+@Composable
+fun EditDialogPreview(
+    @PreviewParameter(SampleMembersProvider::class) members: List<MemberEntity>
+) {
+    EditMemberDialog(
+        initialName = members[1].name,
+        onConfirm = {},
+        onDismiss = {}
     )
 }

@@ -19,9 +19,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jetpackcompose.R
 
+
 @Composable
 fun LoginContent(
-    ui: LoginUiState,
+    uiState: LoginUiState,
     onAccountChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onLoginClick: () -> Unit
@@ -54,22 +55,22 @@ fun LoginContent(
 
                 // 帳號輸入
                 OutlinedTextField(
-                    value = ui.account,
+                    value = uiState.account,
                     onValueChange = onAccountChange,
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Please enter member account") },
                     singleLine = true,
-                    isError = ui.error != null
+                    isError = uiState.error != null
                 )
 
                 // 密碼輸入
                 OutlinedTextField(
-                    value = ui.password,
+                    value = uiState.password,
                     onValueChange = onPasswordChange,
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Please enter password") },
                     singleLine = true,
-                    isError = ui.error != null,
+                    isError = uiState.error != null,
                     visualTransformation = if (showPwd)
                         VisualTransformation.None
                     else
@@ -89,7 +90,7 @@ fun LoginContent(
                 )
 
                 // 錯誤提示
-                ui.error?.let {
+                uiState.error?.let {
                     Text(it, color = MaterialTheme.colorScheme.error)
                 }
 
@@ -130,7 +131,7 @@ fun LoginContent(
 @Composable
 fun LoginContentPreview() {
     LoginContent(
-        ui = LoginUiState(account = "", password = "", error = null),
+        uiState = LoginUiState(account = "", password = "", error = null),
         onAccountChange = {},
         onPasswordChange = {},
         onLoginClick = {}
@@ -141,7 +142,7 @@ fun LoginContentPreview() {
 @Composable
 fun LoginPreview_Error() {
     LoginContent(
-        ui = LoginUiState(account = "Test1", password = "Test1", error = "account or password incorrect"),
+        uiState = LoginUiState(account = "Test1", password = "Test1", error = "account or password incorrect"),
         onAccountChange = {},
         onPasswordChange = {},
         onLoginClick = {}
