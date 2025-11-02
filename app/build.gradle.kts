@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.ksp)
+    id("com.google.gms.google-services") // 🔹 認證
 }
 
 
@@ -70,7 +71,12 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-    //
+    // 🔹 Firebase BoM（統一版本控制）
+    implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
+
+    // 🔹 Firebase Authentication
+    implementation("com.google.firebase:firebase-auth-ktx")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -19,13 +19,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jetpackcompose.R
 
+data class RegisterUiState(
+    val email: String = "",
+    val password: String = "",
+    val confirm: String = "",
+    val loading: Boolean = false,
+    val error: String? = null
+)
+
 @Composable
-fun LoginContent(
-    uiState: LoginUiState,
-    onAccountChange: (String) -> Unit,
+fun RegisterContent(
+    ui: RegisterUiState,
+    onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
-    onLoginClick: () -> Unit,
-    onSignUpClick: () -> Unit // ★ 新增：導向註冊的 callback
+    onConfirmChange: (String) -> Unit,
+    onRegisterClick: () -> Unit,
+    onBackToLoginClick: () -> Unit
 ) {
     var showPwd by remember { mutableStateOf(false) }
 
@@ -41,7 +50,7 @@ fun LoginContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo
+                // Logo（沿用你的 login 設計）
                 Image(
                     painter = painterResource(R.drawable.logo_twjoin),
                     contentDescription = "TWJOIN",
@@ -53,24 +62,25 @@ fun LoginContent(
                     contentScale = ContentScale.Fit
                 )
 
-                // 帳號輸入
+                // Email
                 OutlinedTextField(
-                    value = uiState.account,
-                    onValueChange = onAccountChange,
+                    value = ui.email,
+                    onValueChange = onEmailChange,
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Please enter member account") },
                     singleLine = true,
-                    isError = uiState.error != null
+                    isError = ui.error != null,
+                    enabled = !ui.loading
                 )
 
-                // 密碼輸入（保留眼睛切換）
+                // Password
                 OutlinedTextField(
-                    value = uiState.password,
+                    value = ui.password,
                     onValueChange = onPasswordChange,
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Please enter password") },
                     singleLine = true,
-                    isError = uiState.error != null,
+                    isError = ui.error != null,
                     visualTransformation = if (showPwd) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(onClick = { showPwd = !showPwd }) {
@@ -83,17 +93,40 @@ fun LoginContent(
                                 tint = Color.Unspecified
                             )
                         }
-                    }
+                    },
+                    enabled = !ui.loading
+                )
+
+                // Confirm Password（沿用同一個眼睛切換）
+                OutlinedTextField(
+                    value = ui.confirm,
+                    onValueChange = onConfirmChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Please confirm password") },
+                    singleLine = true,
+                    isError = ui.error != null,
+                    visualTransformation = if (showPwd) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { showPwd = !showPwd }) {
+                            Icon(
+                                painter = painterResource(
+                                    if (showPwd) R.drawable.eye else R.drawable.eye_close
+                                ),
+                                contentDescription = if (showPwd) "Hide password" else "Show password",
+                                modifier = Modifier.size(22.dp),
+                                tint = Color.Unspecified
+                            )
+                        }
+                    },
+                    enabled = !ui.loading
                 )
 
                 // 錯誤提示
-                uiState.error?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error)
-                }
+                ui.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 
-                // 登入按鈕
+                // Register 按鈕（與 Login 一致的深灰色樣式）
                 Button(
-                    onClick = onLoginClick,
+                    onClick = onRegisterClick,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -102,10 +135,11 @@ fun LoginContent(
                         containerColor = Color(0xFF4A4A4A),
                         contentColor = Color.White
                     ),
-                    contentPadding = PaddingValues(horizontal = 24.dp)
+                    contentPadding = PaddingValues(horizontal = 24.dp),
+                    enabled = !ui.loading && ui.email.isNotBlank() && ui.password.isNotBlank() && ui.confirm.isNotBlank()
                 ) {
                     Text(
-                        text = "Login",
+                        text = if (ui.loading) "Processing..." else "Register",
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontSize = 16.sp,
                             letterSpacing = 0.25.sp
@@ -120,38 +154,44 @@ fun LoginContent(
                     )
                 }
 
-                // ★ 新增：註冊導向按鈕（樣式輕量）
+                // 回到登入
                 TextButton(
-                    onClick = onSignUpClick,
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text("Don't have an account? Register")
-                }
+                    onClick = onBackToLoginClick,
+                    modifier = Modifier.align(Alignment.End),
+                    enabled = !ui.loading
+                ) { Text("← Back to Login") }
             }
         }
     }
 }
 
-@Preview(name = "normal", showBackground = true)
+@Preview(name = "Register - empty", showBackground = true)
 @Composable
-fun LoginContentPreview() {
-    LoginContent(
-        uiState = LoginUiState(account = "", password = "", error = null),
-        onAccountChange = {},
+fun RegisterContentPreview() {
+    RegisterContent(
+        ui = RegisterUiState(),
+        onEmailChange = {},
         onPasswordChange = {},
-        onLoginClick = {},
-        onSignUpClick = {}
+        onConfirmChange = {},
+        onRegisterClick = {},
+        onBackToLoginClick = {}
     )
 }
 
-@Preview(name="error", showBackground = true)
+@Preview(name = "Register - error", showBackground = true)
 @Composable
-fun LoginPreview_Error() {
-    LoginContent(
-        uiState = LoginUiState(account = "Test1", password = "Test1", error = "account or password incorrect"),
-        onAccountChange = {},
+fun RegisterContentErrorPreview() {
+    RegisterContent(
+        ui = RegisterUiState(
+            email = "test@example.com",
+            password = "12345678",
+            confirm = "1234",
+            error = "Passwords do not match"
+        ),
+        onEmailChange = {},
         onPasswordChange = {},
-        onLoginClick = {},
-        onSignUpClick = {}
+        onConfirmChange = {},
+        onRegisterClick = {},
+        onBackToLoginClick = {}
     )
 }
