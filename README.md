@@ -4,10 +4,9 @@ Android App built with Jetpack Compose + MVVM + Room + OpenAI API + Firebase Aut
 2025/11/05
 ⚙️ 專案啟動快速手冊
 ☑️ 1️⃣ OpenAI 金鑰設定
-# 在 local.properties 新增：
+在 local.properties 新增：
 OPENAI_API_KEY=你的OpenAI金鑰
-
-# 在 app/build.gradle 加入：
+在 app/build.gradle 加入：
 buildConfigField("String", "OPENAI_API_KEY", "\"${properties["OPENAI_API_KEY"]}\"")
 ☑️ 2️⃣ Firebase 設定
 於 Firebase Console 建立 Android 專案
