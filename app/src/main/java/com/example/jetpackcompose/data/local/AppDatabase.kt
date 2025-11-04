@@ -6,17 +6,19 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [MemberEntity::class],
-    version = 1,
+    entities = [
+        MemberEntity::class, AvatarEntity::class
+    ],
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun memberDao(): MemberDao
-
+    abstract fun avatarDao(): AvatarDao   // ★ 新增
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null
-        fun get(context: Context): AppDatabase =
+        fun getInstance(context: Context): AppDatabase =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,

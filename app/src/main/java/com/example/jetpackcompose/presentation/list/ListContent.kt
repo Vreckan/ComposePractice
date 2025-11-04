@@ -1,5 +1,8 @@
 package com.example.jetpackcompose.list
 
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,7 +16,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -43,6 +49,10 @@ fun ListContent(
     onImportConfirm: () -> Unit,
     onAddConfirm: (String) -> Unit,
     onEditConfirm: (Long, String) -> Unit,
+
+    // --- 頭像相關：這裡只負責顯示、發事件，不開 dialog ---
+    getAvatar: (Long) -> Bitmap? = { null },      // 依 id 取得目前頭像（沒有就 null）
+    onAvatarClick: (Long) -> Unit = {}            // ★ 點頭像要做什麼，交給上層決定
 ) {
     val currentCount = members.size
 
@@ -93,6 +103,8 @@ fun ListContent(
                 items(items = members, key = { it.id }) { m ->
                     ListRow(
                         name = m.name,
+                        avatar = getAvatar(m.id),
+                        onAvatarClick = { onAvatarClick(m.id) },   // ★ 只往上丟 id
                         onEdit = { pendingEdit = m.id to m.name },
                         onDelete = { pendingDeleteId = m.id }
                     )
@@ -147,7 +159,7 @@ fun ListContent(
 }
 
 /* =========================================================
- * 中：子元件（Field / Row / Dialogs）
+ * 中：子元件（原本的都不動）
  * ========================================================= */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -184,6 +196,8 @@ private fun SearchField(
 @Composable
 private fun ListRow(
     name: String,
+    avatar: Bitmap?,
+    onAvatarClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -199,18 +213,33 @@ private fun ListRow(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                modifier = Modifier.size(44.dp),
-                shape = CircleShape,
-                color = Color(0xFFF0F0F0)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painterResource(R.drawable.vector),
-                        contentDescription = null,
-                        tint = Color(0xFF6B6B6B),
-                        modifier = Modifier.size(22.dp)
-                    )
+            // 頭像
+            if (avatar != null) {
+                Image(
+                    bitmap = avatar.asImageBitmap(),
+                    contentDescription = "avatar",
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onAvatarClick),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Surface(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onAvatarClick),
+                    color = Color(0xFFF0F0F0)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            painterResource(R.drawable.vector),
+                            contentDescription = null,
+                            tint = Color(0xFF6B6B6B),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
             }
 
@@ -330,7 +359,6 @@ private fun EditMemberDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
     )
 }
-
 /* =========================================================
  * 下：Preview 區
  * ========================================================= */
@@ -374,7 +402,9 @@ fun memberListRowPreview_All(
             ListRow(
                 name = m.name,
                 onEdit = {},
-                onDelete = {}
+                onDelete = {},
+                onAvatarClick = {},
+                avatar = null
             )
         }
     }
