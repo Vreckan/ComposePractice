@@ -161,7 +161,7 @@ fun GeneratedPreviewDialog(
 fun PreviousImagesFullscreen(
     images: List<AvatarItem>,
     onSelect: (AvatarItem) -> Unit,
-    onClose: () -> Unit
+    onClose: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -185,9 +185,13 @@ fun PreviousImagesFullscreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Recent images", style = MaterialTheme.typography.titleMedium)
-                    TextButton(onClick = onClose) { Text("Close") }
-                }
 
+                    Row {
+                        TextButton(onClick = onClose) {
+                            Text("Close")
+                        }
+                    }
+                }
                 if (images.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -275,7 +279,7 @@ private fun Preview_AvatarPreviousFullscreen() {
         PreviousImagesFullscreen(
             images = items,
             onSelect = {},
-            onClose = {}
+            onClose = {},
         )
     }
 }

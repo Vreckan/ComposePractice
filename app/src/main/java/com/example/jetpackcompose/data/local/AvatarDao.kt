@@ -3,6 +3,7 @@ package com.example.jetpackcompose.data.local
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 
 @Dao
 interface AvatarDao {
@@ -38,4 +39,32 @@ interface AvatarDao {
     // ❽ 最近幾張（做「Recent images」的那個畫面）
     @Query("SELECT * FROM avatars ORDER BY createdAt DESC LIMIT :limit")
     suspend fun getRecent(limit: Int): List<AvatarEntity>
+
+    // ❾ ✅ 新增：綁定新的頭像時，如果這個人原本有頭像就先拆掉
+
+    @Transaction
+    suspend fun bindAvatarToMemberReplacingOld(
+        avatarId: Long,
+        memberId: Long
+    ): Long? {
+        // 找這個人現在正在用的那張（可能沒有）
+        val oldAvatar = getByMember(memberId)
+
+        // 有舊的 → 先把舊的 owner 清掉
+        if (oldAvatar != null) {
+            rebindAvatar(oldAvatar.id, null)
+        }
+
+        // 再把新的綁給這個人
+        rebindAvatar(avatarId, memberId)
+
+        // 回傳舊的那張的 id，讓上層有需要可以處理
+        return oldAvatar?.id
+    }
+
+    @Query("SELECT COUNT(*) FROM avatars")
+    suspend fun countAll(): Int
+
+    @Insert
+    suspend fun insertAll(list: List<AvatarEntity>)
 }

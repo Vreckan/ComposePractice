@@ -19,14 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jetpackcompose.R
 
-data class RegisterUiState(
-    val email: String = "",
-    val password: String = "",
-    val confirm: String = "",
-    val loading: Boolean = false,
-    val error: String? = null
-)
-
 @Composable
 fun RegisterContent(
     ui: RegisterUiState,

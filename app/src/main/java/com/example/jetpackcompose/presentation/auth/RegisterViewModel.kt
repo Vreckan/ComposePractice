@@ -8,6 +8,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+data class RegisterUiState(
+    val email: String = "",
+    val password: String = "",
+    val confirm: String = "",
+    val loading: Boolean = false,
+    val error: String? = null
+)
 
 class RegisterViewModel(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()

@@ -28,7 +28,8 @@ data class AvatarUiState(
     val error: String? = null,
     val previousImages: List<AvatarItem> = emptyList(), // 舊圖清單
     val showPreviousPicker: Boolean = false,            // 是否顯示舊圖挑選視窗
-    val selectedAvatarId: Long? = null                  // 使用者挑選的舊圖 id
+    val selectedAvatarId: Long? = null,            // 使用者挑選的舊圖 id
+    val generatedAvatarId: Long? = null
 )
 
 /**
@@ -47,6 +48,12 @@ class AvatarViewModel(
     fun onFruitChange(s: String) = _ui.update { it.copy(fruit = s, error = null) }
     fun onAnimalChange(s: String) = _ui.update { it.copy(animal = s, error = null) }
 
+    //清預覽
+    fun clearPreview() {
+        _ui.update { it.copy(image = null, selectedAvatarId = null) }
+    }
+
+    //載入預設圖
     /* ------------------------------------------------------------
      * 2️⃣ 生成新圖
      * ------------------------------------------------------------ */
@@ -59,29 +66,25 @@ class AvatarViewModel(
         }
 
         viewModelScope.launch {
-            _ui.update { it.copy(loading = true, image = null, error = null, selectedAvatarId = null) }
+            _ui.update { it.copy(loading = true, image = null, error = null) }
             try {
-                val entity = withTimeout(120_000L) {
-                    repo.generateAndSave(memberId = memberId, fruit = f, animal = a)
-                }
+                val entity = repo.generateAndSave(memberId, f, a)
                 val bmp = repo.loadBitmapFromPath(entity.filePath)
+
                 _ui.update {
                     it.copy(
                         loading = false,
                         image = bmp,
-                        savedPath = entity.filePath,
-                        error = null,
-                        selectedAvatarId = null
+                        generatedAvatarId = entity.id,     // ✅ 記住剛生成的圖的 id
+                        savedPath = entity.filePath,       // ✅ 記住圖的路徑（如有需要）
+                        error = null
                     )
                 }
-            } catch (e: CancellationException) {
-                _ui.update { it.copy(loading = false) }
             } catch (e: Exception) {
                 _ui.update { it.copy(loading = false, error = e.message ?: "生成失敗") }
             }
         }
     }
-
     /* ------------------------------------------------------------
      * 3️⃣ 打開舊圖挑選清單
      * ------------------------------------------------------------ */
@@ -89,14 +92,14 @@ class AvatarViewModel(
         viewModelScope.launch {
             _ui.update { it.copy(showPreviousPicker = true, previousImages = emptyList()) }
             try {
-                val list = repo.loadRecentAvatars(limit = 50)
-                _ui.update { it.copy(previousImages = list) }
+                val recents = repo.loadRecentAvatars(limit = 50)
+                _ui.update { it.copy(previousImages = recents) }
+
             } catch (e: Exception) {
-                _ui.update { it.copy(error = "載入舊圖失敗") }
+                _ui.update { it.copy(error = "載入舊圖失敗：${e.message}") }
             }
         }
     }
-
     /* ------------------------------------------------------------
      * 4️⃣ 使用者從舊圖清單挑了一張
      * ------------------------------------------------------------ */
@@ -109,6 +112,8 @@ class AvatarViewModel(
             )
         }
     }
+
+
     /**
      * 這裡多一個 onDone，把「舊主人 id」回傳給畫面
      */
@@ -133,6 +138,18 @@ class AvatarViewModel(
         }
     }
 
+    fun bindGeneratedAvatarToMember(avatarId: Long, memberId: Long, onDone: (Long?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val oldOwnerId = repo.bindGeneratedAvatarToMember(avatarId, memberId)
+                _ui.update { it.copy(generatedAvatarId = null) }
+                onDone(oldOwnerId)
+            } catch (e: Exception) {
+                _ui.update { it.copy(error = "綁定頭像失敗：${e.message}") }
+                onDone(null)
+            }
+        }
+    }
     /* ------------------------------------------------------------
      * 6️⃣ 關閉舊圖挑選清單
      * ------------------------------------------------------------ */

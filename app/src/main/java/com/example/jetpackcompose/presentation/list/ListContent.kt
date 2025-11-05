@@ -29,13 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.example.jetpackcompose.R
 import com.example.jetpackcompose.data.local.MemberEntity
 
-/* ------------------------- 色票 ------------------------- */
-object AppColors {
-    val ScreenBg  = Color(0xFFFAF7F2)
-    val CardBg    = Color.White
-    val EditGray  = Color(0xFF8F8F8F)
-    val DeleteRed = Color(0xFFE53935)
-}
+
 
 /* =========================================================
  * 上：主畫面（組裝層）

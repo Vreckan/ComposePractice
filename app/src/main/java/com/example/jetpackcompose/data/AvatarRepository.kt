@@ -50,7 +50,7 @@ class AvatarRepository(
         )
 
         val entity = AvatarEntity(
-            memberId = memberId,
+            memberId = null,
             filePath = file.absolutePath
         )
         val newId = avatarDao.insert(entity)
@@ -174,4 +174,39 @@ class AvatarRepository(
         oldOwnerId
     }
 
+    //圖片綁定id
+    suspend fun bindGeneratedAvatarToMember(avatarId: Long, memberId: Long): Long? =
+        withContext(Dispatchers.IO) {
+            avatarDao.bindAvatarToMemberReplacingOld(avatarId, memberId)
+        }
+
+    suspend fun preloadFromAssetsIfEmpty() = withContext(Dispatchers.IO) {
+        // 已經有圖就不要重複塞
+        val count = avatarDao.countAll()
+        if (count > 0) return@withContext
+
+        // assets/avatars/ 底下的圖都塞進來
+        val assetManager = appContext.assets
+        val files = assetManager.list("avatars") ?: return@withContext
+
+        val entities = files.map { fileName ->
+            // 讀 assets 檔
+            val input = assetManager.open("avatars/$fileName")
+            val bytes = input.readBytes()
+            input.close()
+
+            // 存到內部儲存，讓之後都走同一條路
+            val outFile = File(appContext.filesDir, "pre_avatar_$fileName")
+            outFile.writeBytes(bytes)
+
+            // 建一筆 DB，但先不綁人
+            AvatarEntity(
+                memberId = null,
+                filePath = outFile.absolutePath,
+                createdAt = System.currentTimeMillis()
+            )
+        }
+
+        avatarDao.insertAll(entities)
+    }
 }

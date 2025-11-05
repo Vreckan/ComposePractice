@@ -29,7 +29,7 @@ fun LoginContent(
 ) {
     var showPwd by remember { mutableStateOf(false) }
 
-    Surface(color = Color(0xFFF6F1EB), modifier = Modifier.fillMaxSize()) {
+    Surface(color = AppColors.ScreenBg, modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
