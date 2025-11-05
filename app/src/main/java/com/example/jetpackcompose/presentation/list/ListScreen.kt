@@ -51,6 +51,7 @@ fun ListScreen(
         onQueryChange = listVm::onSearchChange,
         onDeleteConfirm = listVm::deleteMember,
         onImportConfirm = listVm::reseedFromAssets,
+        onClearAllConfirm = listVm::clearAllmember,
         onAddConfirm = listVm::addMember,
         onEditConfirm = listVm::updateMemberName,
         getAvatar = { id -> avatars[id] },

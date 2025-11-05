@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,6 +48,7 @@ fun ListContent(
     onQueryChange: (String) -> Unit,
     onDeleteConfirm: (Long) -> Unit,
     onImportConfirm: () -> Unit,
+    onClearAllConfirm: () -> Unit,
     onAddConfirm: (String) -> Unit,
     onEditConfirm: (Long, String) -> Unit,
 
@@ -61,6 +63,8 @@ fun ListContent(
     var showImportConfirm by rememberSaveable { mutableStateOf(false) }
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
     var pendingEdit by rememberSaveable { mutableStateOf<Pair<Long, String>?>(null) }
+    var showClearAllConfirm by rememberSaveable { mutableStateOf(false) }
+
 
     Scaffold(
         containerColor = AppColors.ScreenBg,
@@ -68,6 +72,9 @@ fun ListContent(
             TopAppBar(
                 title = { Text("Members — $currentCount records") },
                 actions = {
+                    IconButton(onClick = { showClearAllConfirm= true }) {
+                        Icon(Icons.Outlined.DeleteSweep, contentDescription = "CLear All")
+                    }
                     IconButton(onClick = { showImportConfirm = true }) {
                         Icon(Icons.Outlined.FileDownload, contentDescription = "Import default data")
                     }
@@ -131,6 +138,13 @@ fun ListContent(
         ImportConfirmDialog(
             onConfirm = { showImportConfirm = false; onImportConfirm() },
             onDismiss = { showImportConfirm = false }
+        )
+    }
+    //清空
+    if (showClearAllConfirm) {
+        ClearAllConfirmDialog(
+            onConfirm = { showClearAllConfirm = false; onClearAllConfirm() },
+            onDismiss = { showClearAllConfirm = false }
         )
     }
 
@@ -306,6 +320,20 @@ private fun ImportConfirmDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
     )
 }
+/* --- Dialog: 清空成員 --- */
+@Composable
+private fun ClearAllConfirmDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("清除目前成員") },
+        text = { Text("此動作會清空目前成員，生成過的圖片仍可使用") },
+        confirmButton = { TextButton(onClick = onConfirm) { Text("清空") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+    )
+}
 
 /* --- Dialog: 新增成員 --- */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -384,6 +412,7 @@ fun ListContentPreview_Sample(
         onQueryChange = {},
         onDeleteConfirm = {},
         onImportConfirm = {},
+        onClearAllConfirm ={},
         onAddConfirm = {},
         onEditConfirm = { _, _ -> }
     )
@@ -426,6 +455,12 @@ fun DeleteDialogPreview(
 @Composable
 fun ImportDialogPreview() {
     ImportConfirmDialog(onConfirm = {}, onDismiss = {})
+}
+
+@Preview(name = "Dialog - Import", showBackground = true)
+@Composable
+fun ClearnDialogPreview() {
+    ClearAllConfirmDialog(onConfirm = {}, onDismiss = {})
 }
 
 @Preview(name = "Dialog - Add", showBackground = true)

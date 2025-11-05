@@ -44,4 +44,6 @@ class MemberRepository(
         val normalized = list.map { it.copy(id = 0L) }
         dao.insertAll(normalized)
     }
+
+    suspend fun clearAllmember()=dao.deleteAll()
 }

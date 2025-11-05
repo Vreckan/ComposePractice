@@ -48,6 +48,8 @@ _avatars.update { old -> old - id }
     fun ensureSeedIfEmpty() = viewModelScope.launch(Dispatchers.IO) { memberRepo.ensureSeedIfEmpty(app) }
     fun reseedFromAssets() = viewModelScope.launch(Dispatchers.IO) { memberRepo.reseedFromAssets(app) }
 
+    fun clearAllmember()= viewModelScope.launch(Dispatchers.IO) { memberRepo.clearAllmember() }
+
     /* -----------------------------------------------------------
      * 2️⃣ 頭像快取層（UI 即時顯示用）
      * ----------------------------------------------------------- */

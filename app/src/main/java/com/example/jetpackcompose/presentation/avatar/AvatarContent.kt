@@ -12,7 +12,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,144 +26,90 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.jetpackcompose.data.AvatarItem
 
 /* ─────────────────────────────────────────────
- * 輸入區塊
+ * ① 主畫面：這個就是 Dialog + 輸入 + 按鈕
  * ───────────────────────────────────────────── */
 @Composable
 fun AvatarContent(
-    fruit: String,
-    animal: String,
-    loading: Boolean,
-    error: String?,
-    onFruitChange: (String) -> Unit,
-    onAnimalChange: (String) -> Unit,
-    onGenerateClick: () -> Unit,
-    onUsePreviousClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(12.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            OutlinedTextField(
-                value = fruit,
-                onValueChange = onFruitChange,
-                label = { Text("Fruit") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = animal,
-                onValueChange = onAnimalChange,
-                label = { Text("Animal") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = onGenerateClick,
-                    enabled = !loading,
-                    modifier = Modifier.weight(1f).height(48.dp)
-                ) {
-                    if (loading)
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp
-                        )
-                    else Text("Generate")
-                }
-
-                OutlinedButton(
-                    onClick = onUsePreviousClick,
-                    enabled = !loading,
-                    modifier = Modifier.weight(1f).height(48.dp)
-                ) {
-                    Text("Use previous")
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            when {
-                loading -> Text("Generating…")
-                error != null -> Text(error, color = MaterialTheme.colorScheme.error)
-            }
-        }
-    }
-}
-
-/* ─────────────────────────────────────────────
- * Dialog 本體（全部事件都丟出去）
- * ───────────────────────────────────────────── */
-@Composable
-fun AvatarDialog(
     memberName: String,
-    // 狀態
     fruit: String,
     animal: String,
     loading: Boolean,
     error: String?,
-    image: Bitmap?,
-    showPreviousPicker: Boolean,
-    previousImages: List<AvatarItem>,
-    // 事件
     onFruitChange: (String) -> Unit,
     onAnimalChange: (String) -> Unit,
     onGenerateClick: () -> Unit,
     onUsePreviousClick: () -> Unit,
-    onConfirmGenerated: (Bitmap) -> Unit,
-    onSelectPrevious: (AvatarItem) -> Unit,
-    onClosePrevious: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var showPreview by remember { mutableStateOf(false) }
-
-    // 有新圖就開第二層預覽
-    LaunchedEffect(image) {
-        if (image != null) showPreview = true
-    }
-
-    // ❶ 如果「正在選舊圖」，就只畫舊圖頁，不畫第一層 Dialog
-    if (showPreviousPicker) {
-        PreviousImagesFullscreen(
-            images = previousImages,
-            onSelect = onSelectPrevious,
-            onClose = onClosePrevious
-        )
-        return   // ← 直接結束，不要往下畫 AlertDialog
-    }
-
-    // ❷ 第一層：輸入 Dialog
     AlertDialog(
-        onDismissRequest = {
-            if (!loading && !showPreview) onDismiss()
-        },
+        onDismissRequest = { if (!loading) onDismiss() },
         title = { Text("Generate new avatar for $memberName") },
         text = {
-            AvatarContent(
-                fruit = fruit,
-                animal = animal,
-                loading = loading,
-                error = error,
-                onFruitChange = onFruitChange,
-                onAnimalChange = onAnimalChange,
-                onGenerateClick = onGenerateClick,
-                onUsePreviousClick = onUsePreviousClick
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OutlinedTextField(
+                    value = fruit,
+                    onValueChange = onFruitChange,
+                    label = { Text("Fruit") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = animal,
+                    onValueChange = onAnimalChange,
+                    label = { Text("Animal") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onGenerateClick,
+                        enabled = !loading,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                    ) {
+                        if (loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Generate")
+                        }
+                    }
+
+                    OutlinedButton(
+                        onClick = onUsePreviousClick,
+                        enabled = !loading,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                    ) {
+                        // 改短避免被擠
+                        Text("Use recent")
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                when {
+                    loading -> Text("Generating…")
+                    error != null -> Text(error, color = MaterialTheme.colorScheme.error)
+                }
+            }
         },
         confirmButton = {},
         dismissButton = {
@@ -171,48 +118,47 @@ fun AvatarDialog(
             }
         },
         properties = DialogProperties(
-            dismissOnClickOutside = !loading && !showPreview
+            dismissOnClickOutside = !loading
         )
     )
-
-    // ❸ 第二層：生成後預覽
-    if (showPreview) {
-        image?.let { bmp ->
-            AlertDialog(
-                onDismissRequest = { showPreview = false },
-                title = { Text("Use this image?") },
-                text = {
-                    Image(
-                        bitmap = bmp.asImageBitmap(),
-                        contentDescription = "Generated avatar",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(260.dp),
-                        contentScale = ContentScale.Crop
-                    )
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        onConfirmGenerated(bmp)
-                        showPreview = false
-                        //onDismiss()
-                    }) { Text("Use this image") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showPreview = false }) {
-                        Text("Generate again")
-                    }
-                },
-                properties = DialogProperties(dismissOnClickOutside = true)
-            )
-        }
-    }
 }
+
 /* ─────────────────────────────────────────────
- * 滿版舊圖選單
+ * ② 生成後的「Use this image?」Dialog
  * ───────────────────────────────────────────── */
 @Composable
-private fun PreviousImagesFullscreen(
+fun GeneratedPreviewDialog(
+    image: Bitmap,
+    onUse: () -> Unit,
+    onRegenerate: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onRegenerate,
+        title = { Text("Use this image?") },
+        text = {
+            Image(
+                bitmap = image.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(260.dp),
+                contentScale = ContentScale.Crop
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onUse) { Text("Use this image") }
+        },
+        dismissButton = {
+            TextButton(onClick = onRegenerate) { Text("Generate again") }
+        }
+    )
+}
+
+/* ─────────────────────────────────────────────
+ * ③ 最近圖片全螢幕
+ * ───────────────────────────────────────────── */
+@Composable
+fun PreviousImagesFullscreen(
     images: List<AvatarItem>,
     onSelect: (AvatarItem) -> Unit,
     onClose: () -> Unit
@@ -278,11 +224,13 @@ private fun PreviousImagesFullscreen(
 /* ─────────────────────────────────────────────
  * Previews
  * ───────────────────────────────────────────── */
-@Preview(showBackground = true)
+
+@Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun Preview_AvatarInput() {
+private fun Preview_AvatarContent() {
     MaterialTheme {
         AvatarContent(
+            memberName = "Cindy",
             fruit = "Apple",
             animal = "Fox",
             loading = false,
@@ -290,41 +238,25 @@ private fun Preview_AvatarInput() {
             onFruitChange = {},
             onAnimalChange = {},
             onGenerateClick = {},
-            onUsePreviousClick = {}
+            onUsePreviousClick = {},
+            onDismiss = {}
         )
     }
 }
 
-
-@Preview
+@Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun Preview_AvatarGeneratedDialog() {
-    val fake = remember {
+private fun Preview_GeneratedPreviewDialog() {
+    val bmp = remember {
         Bitmap.createBitmap(200, 200, Bitmap.Config.ARGB_8888).apply {
-            eraseColor(android.graphics.Color.LTGRAY)
+            eraseColor(android.graphics.Color.rgb(255, 150, 180))
         }
     }
-
     MaterialTheme {
-        AlertDialog(
-            onDismissRequest = {},
-            title = { Text("Use this image?") },
-            text = {
-                Image(
-                    bitmap = fake.asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(260.dp),
-                    contentScale = ContentScale.Crop
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {}) { Text("Use this image") }
-            },
-            dismissButton = {
-                TextButton(onClick = {}) { Text("Generate again") }
-            }
+        GeneratedPreviewDialog(
+            image = bmp,
+            onUse = {},
+            onRegenerate = {}
         )
     }
 }
@@ -332,20 +264,18 @@ private fun Preview_AvatarGeneratedDialog() {
 @Preview(showBackground = true, widthDp = 360, heightDp = 640)
 @Composable
 private fun Preview_AvatarPreviousFullscreen() {
-    val items = remember {
-        List(6) { idx ->
-            val bmp = Bitmap.createBitmap(200, 200, Bitmap.Config.ARGB_8888)
-            bmp.eraseColor(android.graphics.Color.rgb(210, 140 + idx * 8, 120))
-            AvatarItem(
-                id = idx.toLong(),
-                bitmap = bmp
-            )
+    val items = List(6) { idx ->
+        val bmp = Bitmap.createBitmap(200, 200, Bitmap.Config.ARGB_8888).apply {
+            eraseColor(android.graphics.Color.rgb(220, 180 - idx * 15, 130 + idx * 10))
         }
+        AvatarItem(id = idx.toLong(), bitmap = bmp)
     }
-    PreviousImagesFullscreen(
-        images = items,
-        onSelect = {},
-        onClose = {}
-    )
-}
 
+    MaterialTheme {
+        PreviousImagesFullscreen(
+            images = items,
+            onSelect = {},
+            onClose = {}
+        )
+    }
+}

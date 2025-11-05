@@ -25,9 +25,6 @@ interface MemberDao {
     suspend fun countOnce(): Int
 
     @Query("DELETE FROM members")
-    suspend fun clear()
-
-    @Query("DELETE FROM members")
     suspend fun deleteAll()
 
     @Insert
