@@ -241,7 +241,6 @@ implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
 **Cheng Hong (Vreckan)**  
 Android Developer / Jetpack Compose Learner  
-📍 Taiwan ↔ Canada  
 
 🔗 GitHub: [github.com/Vreckan](https://github.com/Vreckan)
 
