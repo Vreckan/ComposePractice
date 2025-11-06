@@ -176,4 +176,42 @@ class AvatarViewModel(
                 }
             }
     }
+    /* ------------------ 套用目前的預覽圖 ------------------ */
+    fun applyCurrentPreview(
+        memberId: Long,
+        onDone: (Long?) -> Unit
+    ) {
+        val state = _ui.value
+        viewModelScope.launch {
+            try {
+                val oldOwnerId: Long? = when {
+                    // 1) 從「recent」挑的
+                    state.selectedAvatarId != null -> {
+                        repo.rebindAvatarToMember(
+                            avatarId = state.selectedAvatarId,
+                            memberId = memberId
+                        )
+                    }
+
+                    // 2) 剛生成的
+                    state.generatedAvatarId != null -> {
+                        repo.bindGeneratedAvatarToMember(
+                            avatarId = state.generatedAvatarId,
+                            memberId = memberId
+                        )
+                    }
+
+                    // 3) 沒東西
+                    else -> null
+                }
+
+                // 用完就清 UI
+                clearPreview()
+                onDone(oldOwnerId)
+            } catch (e: Exception) {
+                _ui.update { it.copy(error = "套用頭像失敗：${e.message}") }
+                onDone(null)
+            }
+        }
+    }
 }
