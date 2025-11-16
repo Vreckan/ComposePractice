@@ -70,7 +70,6 @@ class AvatarViewModel(
             try {
                 val entity = repo.generateAndSave(memberId, f, a)
                 val bmp = repo.loadBitmapFromPath(entity.filePath)
-
                 _ui.update {
                     it.copy(
                         loading = false,

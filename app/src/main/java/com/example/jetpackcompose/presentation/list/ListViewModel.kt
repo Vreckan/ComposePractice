@@ -45,6 +45,7 @@ _avatars.update { old -> old - id }
     }
     fun updateMemberName(id: Long, name: String) = viewModelScope.launch { memberRepo.updateName(id, name) }
 
+
     fun ensureSeedIfEmpty() = viewModelScope.launch(Dispatchers.IO) { memberRepo.ensureSeedIfEmpty(app) }
     fun reseedFromAssets() = viewModelScope.launch(Dispatchers.IO) { memberRepo.reseedFromAssets(app) }
 

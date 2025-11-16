@@ -51,7 +51,6 @@ fun ListContent(
     onAvatarClick: (Long) -> Unit = {}            // ★ 點頭像要做什麼，交給上層決定
 ) {
     val currentCount = members.size
-
     // View 專屬臨時狀態
     var pendingDeleteId by rememberSaveable { mutableStateOf<Long?>(null) }
     var showImportConfirm by rememberSaveable { mutableStateOf(false) }

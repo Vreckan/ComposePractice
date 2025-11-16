@@ -9,7 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -42,16 +44,17 @@ fun RegisterContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo（沿用你的 login 設計）
+                // Logo
                 Image(
-                    painter = painterResource(R.drawable.logo_twjoin),
-                    contentDescription = "TWJOIN",
+                    painter = painterResource(id = R.drawable.logo_member_test),
+                    contentDescription = "Logo",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(335f / 173.08f)
-                        .padding(bottom = 10.dp)
-                        .padding(horizontal = 8.dp),
-                    contentScale = ContentScale.Fit
+                        .height(140.dp)
+                        .clip(RectangleShape)
+                        .padding(horizontal = 4.dp)
+                        .padding(bottom = 10.dp),
+                    contentScale = ContentScale.Crop
                 )
 
                 // Email
